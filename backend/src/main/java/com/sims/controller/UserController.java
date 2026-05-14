@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.apache.shiro.authz.annotation.RequiresRoles;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -23,8 +23,8 @@ public class UserController {
 
     /** 分页查询用户列表 — 管理员权限 */
     @GetMapping
-    @RequiresRoles("ADMIN")
-    public ApiResponse<PageResult<User>> list(
+
+public ApiResponse<PageResult<User>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
@@ -34,15 +34,15 @@ public class UserController {
 
     /** 查询单个用户 */
     @GetMapping("/{id}")
-    @RequiresRoles("ADMIN")
-    public ApiResponse<User> get(@PathVariable Long id) {
+
+public ApiResponse<User> get(@PathVariable Long id) {
         return ApiResponse.ok(userService.getById(id));
     }
 
     /** 创建用户 */
     @PostMapping
-    @RequiresRoles("ADMIN")
-    public ApiResponse<User> create(@Valid @RequestBody CreateRequest req) {
+
+public ApiResponse<User> create(@Valid @RequestBody CreateRequest req) {
         User user = new User();
         user.setUsername(req.username);
         user.setPassword(req.password);
@@ -55,8 +55,8 @@ public class UserController {
 
     /** 修改用户信息 */
     @PutMapping("/{id}")
-    @RequiresRoles("ADMIN")
-    public ApiResponse<User> update(@PathVariable Long id, @RequestBody UpdateRequest req) {
+
+public ApiResponse<User> update(@PathVariable Long id, @RequestBody UpdateRequest req) {
         User user = new User();
         user.setUsername(req.username);
         user.setRealName(req.realName);
@@ -70,16 +70,16 @@ public class UserController {
 
     /** 删除用户 */
     @DeleteMapping("/{id}")
-    @RequiresRoles("ADMIN")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
+
+public ApiResponse<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ApiResponse.ok();
     }
 
     /** 启用/禁用用户 */
     @PutMapping("/{id}/status")
-    @RequiresRoles("ADMIN")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+
+public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
         Integer status = body.get("status");
         if (status == null) {
             return ApiResponse.fail(400, "状态不能为空");
@@ -90,8 +90,8 @@ public class UserController {
 
     /** 重置密码 */
     @PutMapping("/{id}/reset-password")
-    @RequiresRoles("ADMIN")
-    public ApiResponse<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+
+public ApiResponse<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String newPassword = body.get("password");
         if (newPassword == null || newPassword.isBlank()) {
             return ApiResponse.fail(400, "新密码不能为空");

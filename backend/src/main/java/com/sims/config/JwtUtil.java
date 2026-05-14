@@ -52,4 +52,18 @@ public class JwtUtil {
     public Long getUserId(String token) {
         return Long.parseLong(parseToken(token).getSubject());
     }
+
+    public String getUsername(String token) {
+        return parseToken(token).get("username", String.class);
+    }
+
+    public boolean validate(String token, String username) {
+        try {
+            Claims claims = parseToken(token);
+            String claimUsername = claims.get("username", String.class);
+            return username.equals(claimUsername);
+        } catch (JwtException e) {
+            return false;
+        }
+    }
 }

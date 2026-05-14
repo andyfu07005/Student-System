@@ -3,7 +3,7 @@ package com.sims.controller;
 import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sims.common.ApiResponse;
-import com.sims.common.exception.BusinessException;
+import com.sims.common.BusinessException;
 import com.sims.config.JwtUtil;
 import com.sims.entity.User;
 import com.sims.mapper.UserMapper;
