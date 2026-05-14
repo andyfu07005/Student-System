@@ -1,24 +1,40 @@
 import axios from 'axios'
+import type { AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '../router'
 
-const request = axios.create({
+const http = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 30000,
 })
 
-request.interceptors.response.use(
-  (response) => {
-    const res = response.data
-    if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-      return Promise.reject(new Error(res.message || '请求失败'))
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+http.interceptors.response.use(
+  (response: AxiosResponse) => {
+    const data = response.data
+    if (data.code === 401) {
+      localStorage.removeItem('token')
+      router.push('/login')
+      return Promise.reject(new Error(data.message))
     }
-    return res
+    return response
   },
   (error) => {
-    ElMessage.error(error.message || '网络错误')
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      router.push('/login')
+    } else {
+      ElMessage.error(error.response?.data?.message || error.message || '请求失败')
+    }
     return Promise.reject(error)
   }
 )
 
-export default request
+export default http

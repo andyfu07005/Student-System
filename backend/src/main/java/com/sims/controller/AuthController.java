@@ -1,0 +1,72 @@
+package com.sims.controller;
+
+import cn.hutool.crypto.digest.BCrypt;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.sims.common.ApiResponse;
+import com.sims.common.exception.BusinessException;
+import com.sims.config.JwtUtil;
+import com.sims.entity.User;
+import com.sims.mapper.UserMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final UserMapper userMapper;
+    private final JwtUtil jwtUtil;
+
+    @Value("${login.max-fail-count:5}")
+    private int maxFailCount;
+    @Value("${login.lock-duration-minutes:30}")
+    private int lockMinutes;
+
+    @PostMapping("/login")
+    public ApiResponse<Map<String, Object>> login(@RequestBody LoginRequest req) {
+        LambdaQueryWrapper<User> qw = new LambdaQueryWrapper<>();
+        qw.eq(User::getUsername, req.username);
+        User user = userMapper.selectOne(qw);
+
+        if (user == null) {
+            throw new BusinessException("用户名或密码错误");
+        }
+
+        // 检查是否被锁定
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            throw new BusinessException("账号已被锁定，请" + lockMinutes + "分钟后重试");
+        }
+
+        // 检查是否被禁用
+        if (user.getStatus() == 0) {
+            throw new BusinessException("账号已被禁用，请联系管理员");
+        }
+
+        // 验证密码
+        if (!BCrypt.checkpw(req.password, user.getPassword())) {
+            int fails = (user.getLoginFail() == null ? 0 : user.getLoginFail()) + 1;
+            user.setLoginFail(fails);
+            if (fails >= maxFailCount) {
+                user.setLockedUntil(LocalDateTime.now().plusMinutes(lockMinutes));
+            }
+            userMapper.updateById(user);
+            throw new BusinessException("用户名或密码错误");
+        }
+
+        // 登录成功，清除失败计数
+        user.setLoginFail(0);
+        user.setLockedUntil(null);
+        user.setLastLogin(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        return ApiResponse.ok(Map.of("token", token, "userId", user.getId(), "username", user.getUsername()));
+    }
+
+    public record LoginRequest(String username, String password) {}
+}
