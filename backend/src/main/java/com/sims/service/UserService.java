@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sims.common.PageResult;
-import com.sims.common.exception.BusinessException;
+import com.sims.common.BusinessException;
 import com.sims.entity.Role;
 import com.sims.entity.User;
 import com.sims.entity.UserRole;
