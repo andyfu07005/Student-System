@@ -10,42 +10,45 @@ const router = createRouter({
     },
     {
       path: '/',
+      component: () => import('@/components/MainLayout.vue'),
       redirect: '/users',
-    },
-    {
-      path: '/users',
-      name: 'Users',
-      component: () => import('@/views/UserList.vue'),
-    },
-    {
-      path: '/users/:id',
-      name: 'UserDetail',
-      component: () => import('@/views/UserDetail.vue'),
-    },
-    {
-      path: '/enrollment-changes',
-      name: 'EnrollmentChangeList',
-      component: () => import('@/views/EnrollmentChangeList.vue'),
-    },
-    {
-      path: '/enrollment-changes/timeline/:studentId',
-      name: 'EnrollmentChangeTimeline',
-      component: () => import('@/views/EnrollmentChangeTimeline.vue'),
-    },
-    {
-      path: '/students',
-      name: 'StudentList',
-      component: () => import('@/views/StudentList.vue'),
-    },
-    {
-      path: '/classes',
-      name: 'ClassList',
-      component: () => import('@/views/ClassList.vue'),
-    },
-    {
-      path: '/courses',
-      name: 'CourseList',
-      component: () => import('@/views/CourseList.vue'),
+      children: [
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import('@/views/UserList.vue'),
+        },
+        {
+          path: 'users/:id',
+          name: 'UserDetail',
+          component: () => import('@/views/UserDetail.vue'),
+        },
+        {
+          path: 'students',
+          name: 'StudentList',
+          component: () => import('@/views/StudentList.vue'),
+        },
+        {
+          path: 'classes',
+          name: 'ClassList',
+          component: () => import('@/views/ClassList.vue'),
+        },
+        {
+          path: 'courses',
+          name: 'CourseList',
+          component: () => import('@/views/CourseList.vue'),
+        },
+        {
+          path: 'enrollment-changes',
+          name: 'EnrollmentChangeList',
+          component: () => import('@/views/EnrollmentChangeList.vue'),
+        },
+        {
+          path: 'enrollment-changes/timeline/:studentId',
+          name: 'EnrollmentChangeTimeline',
+          component: () => import('@/views/EnrollmentChangeTimeline.vue'),
+        },
+      ],
     },
   ],
 })
