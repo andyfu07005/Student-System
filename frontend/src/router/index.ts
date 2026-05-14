@@ -32,6 +32,21 @@ const router = createRouter({
       name: 'EnrollmentChangeTimeline',
       component: () => import('@/views/EnrollmentChangeTimeline.vue'),
     },
+    {
+      path: '/students',
+      name: 'StudentList',
+      component: () => import('@/views/StudentList.vue'),
+    },
+    {
+      path: '/classes',
+      name: 'ClassList',
+      component: () => import('@/views/ClassList.vue'),
+    },
+    {
+      path: '/courses',
+      name: 'CourseList',
+      component: () => import('@/views/CourseList.vue'),
+    },
   ],
 })
 
