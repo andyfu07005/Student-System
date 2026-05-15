@@ -35,8 +35,10 @@ public class JwtFilter implements Filter {
                 String username = jwtUtil.getUsername(jwt);
                 if (username != null && jwtUtil.validate(jwt, username)) {
                     Long userId = jwtUtil.getUserId(jwt);
+                    String roleCode = jwtUtil.getRoleCode(jwt);
                     req.setAttribute("userId", userId);
                     req.setAttribute("username", username);
+                    req.setAttribute("roleCode", roleCode);
                     chain.doFilter(request, response);
                     return;
                 }

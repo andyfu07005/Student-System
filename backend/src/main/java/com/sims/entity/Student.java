@@ -20,6 +20,7 @@ public class Student {
     private LocalDate enrollmentDate;
     private Long classId;
     private String status;
+    private Long userId;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

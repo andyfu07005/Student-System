@@ -48,6 +48,21 @@ const router = createRouter({
           name: 'UserDetail',
           component: () => import('@/views/UserDetail.vue'),
         },
+        {
+          path: 'grades/my',
+          name: 'GradeStudent',
+          component: () => import('@/views/GradeStudent.vue'),
+        },
+        {
+          path: 'grades/teacher',
+          name: 'GradeTeacher',
+          component: () => import('@/views/GradeTeacher.vue'),
+        },
+        {
+          path: 'grades/admin',
+          name: 'GradeAdmin',
+          component: () => import('@/views/GradeAdmin.vue'),
+        },
       ],
     },
   ],

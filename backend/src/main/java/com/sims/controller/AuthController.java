@@ -5,8 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sims.common.ApiResponse;
 import com.sims.common.BusinessException;
 import com.sims.config.JwtUtil;
+import com.sims.entity.Role;
 import com.sims.entity.User;
+import com.sims.entity.UserRole;
+import com.sims.mapper.RoleMapper;
 import com.sims.mapper.UserMapper;
+import com.sims.mapper.UserRoleMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +24,8 @@ import java.util.Map;
 public class AuthController {
 
     private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
+    private final UserRoleMapper userRoleMapper;
     private final JwtUtil jwtUtil;
 
     @Value("${login.max-fail-count:5}")
@@ -64,8 +70,24 @@ public class AuthController {
         user.setLastLogin(LocalDateTime.now());
         userMapper.updateById(user);
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
-        return ApiResponse.ok(Map.of("token", token, "userId", user.getId(), "username", user.getUsername()));
+        String roleCode = lookupRoleCode(user.getId());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), roleCode);
+        return ApiResponse.ok(Map.of(
+                "token", token,
+                "userId", user.getId(),
+                "username", user.getUsername(),
+                "roleCode", roleCode
+        ));
+    }
+
+    private String lookupRoleCode(Long userId) {
+        UserRole ur = userRoleMapper.selectOne(
+                new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId));
+        if (ur != null) {
+            Role role = roleMapper.selectById(ur.getRoleId());
+            if (role != null) return role.getRoleCode();
+        }
+        return "STUDENT";
     }
 
     public record LoginRequest(String username, String password) {}

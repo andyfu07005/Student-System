@@ -31,6 +31,18 @@
           <el-icon><Document /></el-icon>
           <span>学籍变更</span>
         </el-menu-item>
+        <el-menu-item v-if="roleCode === 'STUDENT'" index="/grades/my">
+          <el-icon><Trophy /></el-icon>
+          <span>我的成绩</span>
+        </el-menu-item>
+        <el-menu-item v-if="roleCode === 'TEACHER' || roleCode === 'ADMIN'" index="/grades/teacher">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>成绩管理</span>
+        </el-menu-item>
+        <el-menu-item v-if="roleCode === 'ADMIN'" index="/grades/admin">
+          <el-icon><PieChart /></el-icon>
+          <span>成绩统计</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -39,7 +51,7 @@
           <el-dropdown>
             <span class="user-info">
               <el-icon><Avatar /></el-icon>
-              <span>{{ username }}</span>
+              <span>{{ username }} ({{ roleName }})</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -71,6 +83,9 @@ const activeMenu = computed(() => {
   if (path.startsWith('/classes')) return '/classes'
   if (path.startsWith('/courses')) return '/courses'
   if (path.startsWith('/enrollment-changes')) return '/enrollment-changes'
+  if (path.startsWith('/grades/my')) return '/grades/my'
+  if (path.startsWith('/grades/teacher')) return '/grades/teacher'
+  if (path.startsWith('/grades/admin')) return '/grades/admin'
   return path
 })
 
@@ -78,9 +93,19 @@ const username = computed(() => {
   return localStorage.getItem('username') || '管理员'
 })
 
+const roleCode = computed(() => {
+  return localStorage.getItem('roleCode') || ''
+})
+
+const roleName = computed(() => {
+  const map: Record<string, string> = { ADMIN: '管理员', TEACHER: '教师', STUDENT: '学生' }
+  return map[roleCode.value] || '未知'
+})
+
 function doLogout() {
   localStorage.removeItem('token')
   localStorage.removeItem('username')
+  localStorage.removeItem('roleCode')
   ElMessage.success('已退出登录')
   router.push('/login')
 }
