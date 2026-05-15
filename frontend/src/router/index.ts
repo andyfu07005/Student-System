@@ -48,6 +48,11 @@ const router = createRouter({
           name: 'EnrollmentChangeTimeline',
           component: () => import('@/views/EnrollmentChangeTimeline.vue'),
         },
+        {
+          path: 'schedule',
+          name: 'ScheduleView',
+          component: () => import('@/views/ScheduleView.vue'),
+        },
       ],
     },
   ],

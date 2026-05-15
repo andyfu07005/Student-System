@@ -19,6 +19,7 @@ public class Student {
     private String address;
     private LocalDate enrollmentDate;
     private Long classId;
+    private Long userId;
     private String status;
 
     @TableField(fill = FieldFill.INSERT)
