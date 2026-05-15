@@ -27,6 +27,10 @@
           <el-icon><Reading /></el-icon>
           <span>课程管理</span>
         </el-menu-item>
+        <el-menu-item index="/schedule">
+          <el-icon><Calendar /></el-icon>
+          <span>课表查询</span>
+        </el-menu-item>
         <el-menu-item index="/enrollment-changes">
           <el-icon><Document /></el-icon>
           <span>学籍变更</span>
@@ -81,6 +85,7 @@ const activeMenu = computed(() => {
   if (path.startsWith('/enrollment-changes')) return '/enrollment-changes'
   if (path.startsWith('/course-selection')) return '/course-selection'
   if (path.startsWith('/course-roster')) return '/course-roster'
+  if (path.startsWith('/schedule')) return '/schedule'
   return path
 })
 
@@ -91,6 +96,7 @@ const username = computed(() => {
 function doLogout() {
   localStorage.removeItem('token')
   localStorage.removeItem('username')
+  localStorage.removeItem('role')
   ElMessage.success('已退出登录')
   router.push('/login')
 }
