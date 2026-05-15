@@ -41,7 +41,7 @@ async function doLogin() {
     const { token } = res.data.data
     localStorage.setItem('token', token)
     ElMessage.success('登录成功')
-    router.push('/users')
+    router.push('/')
   } catch {
     // error handled by interceptor
   } finally {
