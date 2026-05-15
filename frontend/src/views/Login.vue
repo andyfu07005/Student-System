@@ -40,6 +40,7 @@ async function doLogin() {
     const res = await login(form.username, form.password)
     const { token } = res.data.data
     localStorage.setItem('token', token)
+    localStorage.setItem('username', form.username)
     ElMessage.success('登录成功')
     router.push('/')
   } catch {
