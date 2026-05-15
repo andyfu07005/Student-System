@@ -42,7 +42,7 @@ async function doLogin() {
     localStorage.setItem('token', token)
     localStorage.setItem('username', form.username)
     ElMessage.success('登录成功')
-    router.push('/users')
+    router.push('/')
   } catch {
     // error handled by interceptor
   } finally {

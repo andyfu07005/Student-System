@@ -11,18 +11,8 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/components/MainLayout.vue'),
-      redirect: '/users',
+      redirect: '/students',
       children: [
-        {
-          path: 'users',
-          name: 'Users',
-          component: () => import('@/views/UserList.vue'),
-        },
-        {
-          path: 'users/:id',
-          name: 'UserDetail',
-          component: () => import('@/views/UserDetail.vue'),
-        },
         {
           path: 'students',
           name: 'StudentList',
@@ -48,6 +38,16 @@ const router = createRouter({
           name: 'EnrollmentChangeTimeline',
           component: () => import('@/views/EnrollmentChangeTimeline.vue'),
         },
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import('@/views/UserList.vue'),
+        },
+        {
+          path: 'users/:id',
+          name: 'UserDetail',
+          component: () => import('@/views/UserDetail.vue'),
+        },
       ],
     },
   ],
@@ -57,6 +57,9 @@ router.beforeEach((to) => {
   const token = localStorage.getItem('token')
   if (to.name !== 'Login' && !token) {
     return { name: 'Login' }
+  }
+  if (to.name === 'Login' && token) {
+    return '/'
   }
 })
 

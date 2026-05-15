@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:navigation": "node tests/navigation-layout.test.mjs"
   },
   "dependencies": {
     "axios": "^1.7.7",
