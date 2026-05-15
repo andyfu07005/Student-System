@@ -31,6 +31,14 @@
           <el-icon><Document /></el-icon>
           <span>学籍变更</span>
         </el-menu-item>
+        <el-menu-item index="/grades">
+          <el-icon><Tickets /></el-icon>
+          <span>成绩管理</span>
+        </el-menu-item>
+        <el-menu-item index="/transcripts">
+          <el-icon><Printer /></el-icon>
+          <span>成绩单</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -71,6 +79,8 @@ const activeMenu = computed(() => {
   if (path.startsWith('/classes')) return '/classes'
   if (path.startsWith('/courses')) return '/courses'
   if (path.startsWith('/enrollment-changes')) return '/enrollment-changes'
+  if (path.startsWith('/grades')) return '/grades'
+  if (path.startsWith('/transcripts')) return '/transcripts'
   return path
 })
 
