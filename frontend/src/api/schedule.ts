@@ -46,3 +46,30 @@ export function updateSchedule(id: number, data: ScheduleDTO) {
 export function deleteSchedule(id: number) {
   return http.delete(`/schedules/${id}`).then(r => r.data)
 }
+
+// ==== 课表查询 ====
+
+export interface ScheduleItem {
+  id: number
+  courseId: number
+  courseNo: string
+  courseName: string
+  teacherName: string
+  classroom: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  startWeek: number
+  endWeek: number
+}
+
+export interface WeekSchedule {
+  weekLabel: string
+  weekStart: string
+  weekEnd: string
+  items: ScheduleItem[]
+}
+
+export function getWeekSchedule(date: string) {
+  return http.get('/schedule', { params: { date } }).then(r => r.data)
+}

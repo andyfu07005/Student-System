@@ -34,14 +34,19 @@ const router = createRouter({
           component: () => import('@/views/GradeQuery.vue'),
         },
         {
-          path: 'transcript',
-          name: 'Transcript',
-          component: () => import('@/views/Transcript.vue'),
-        },
-        {
           path: 'enrollment-changes',
           name: 'EnrollmentChangeList',
           component: () => import('@/views/EnrollmentChangeList.vue'),
+        },
+        {
+          path: 'grade-management',
+          name: 'GradeManagement',
+          component: () => import('@/views/GradeList.vue'),
+        },
+        {
+          path: 'transcripts',
+          name: 'Transcript',
+          component: () => import('@/views/Transcript.vue'),
         },
         {
           path: 'enrollment-changes/timeline/:studentId',
@@ -67,6 +72,12 @@ const router = createRouter({
           path: 'course-roster',
           name: 'CourseRoster',
           component: () => import('@/views/CourseRoster.vue'),
+        },
+        {
+        {
+          path: 'schedule',
+          name: 'ScheduleView',
+          component: () => import('@/views/ScheduleView.vue'),
         },
         {
           path: 'schedules',

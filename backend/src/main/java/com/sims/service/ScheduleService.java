@@ -3,7 +3,10 @@ package com.sims.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sims.dto.ScheduleDTO;
+import com.sims.dto.schedule.WeekSchedule;
 import com.sims.entity.Schedule;
+
+import java.time.LocalDate;
 
 public interface ScheduleService extends IService<Schedule> {
 
@@ -12,4 +15,6 @@ public interface ScheduleService extends IService<Schedule> {
     Schedule create(ScheduleDTO dto);
 
     Schedule update(Long id, ScheduleDTO dto);
+
+    WeekSchedule getWeekSchedule(Long userId, LocalDate date);
 }
