@@ -163,12 +163,14 @@ public class CourseEnrollmentServiceImpl extends ServiceImpl<CourseEnrollmentMap
         }
 
         Page<EnrolledCourseVO> result = new Page<>(page, size, enrollmentPage.getTotal());
+        final Map<Long, Course> coursesById = courseMap;
+        final Map<Long, String> teacherNamesById = teacherNameMap;
         result.setRecords(enrollmentPage.getRecords().stream().map(e -> {
             EnrolledCourseVO vo = new EnrolledCourseVO();
             vo.setEnrollmentId(e.getId());
             vo.setCourseId(e.getCourseId());
             vo.setEnrolledAt(e.getEnrolledAt() != null ? e.getEnrolledAt().toString() : null);
-            Course c = courseMap.get(e.getCourseId());
+            Course c = coursesById.get(e.getCourseId());
             if (c != null) {
                 vo.setCourseNo(c.getCourseNo());
                 vo.setCourseName(c.getName());
@@ -177,7 +179,7 @@ public class CourseEnrollmentServiceImpl extends ServiceImpl<CourseEnrollmentMap
                 vo.setCapacity(c.getCapacity());
                 vo.setEnrolledCount((int) countEnrolled(c.getId()));
                 if (c.getTeacherId() != null) {
-                    vo.setTeacherName(teacherNameMap.get(c.getTeacherId()));
+                    vo.setTeacherName(teacherNamesById.get(c.getTeacherId()));
                 }
             }
             return vo;
@@ -211,11 +213,12 @@ public class CourseEnrollmentServiceImpl extends ServiceImpl<CourseEnrollmentMap
         }
 
         Page<EnrolledStudentVO> result = new Page<>(page, size, enrollmentPage.getTotal());
+        final Map<Long, Student> studentsById = studentMap;
         result.setRecords(enrollmentPage.getRecords().stream().map(e -> {
             EnrolledStudentVO vo = new EnrolledStudentVO();
             vo.setStudentId(e.getStudentId());
             vo.setEnrolledAt(e.getEnrolledAt() != null ? e.getEnrolledAt().toString() : null);
-            Student s = studentMap.get(e.getStudentId());
+            Student s = studentsById.get(e.getStudentId());
             if (s != null) {
                 vo.setStudentNo(s.getStudentNo());
                 vo.setStudentName(s.getName());
