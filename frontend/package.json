@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
+    "test:api-auth": "node tests/api-auth-header.test.mjs",
     "test:navigation": "node tests/navigation-layout.test.mjs"
   },
   "dependencies": {
