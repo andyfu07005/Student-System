@@ -29,6 +29,16 @@ const router = createRouter({
           component: () => import('@/views/CourseList.vue'),
         },
         {
+          path: 'grades',
+          name: 'GradeQuery',
+          component: () => import('@/views/GradeQuery.vue'),
+        },
+        {
+          path: 'transcript',
+          name: 'Transcript',
+          component: () => import('@/views/Transcript.vue'),
+        },
+        {
           path: 'enrollment-changes',
           name: 'EnrollmentChangeList',
           component: () => import('@/views/EnrollmentChangeList.vue'),

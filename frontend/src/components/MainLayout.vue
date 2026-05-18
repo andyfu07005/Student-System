@@ -9,8 +9,7 @@
         router
         background-color="#304156"
         text-color="#bfcbd9"
-        active-text-color="#409EFF"
-      >
+        active-text-color="#409EFF">
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <span>用户管理</span>
@@ -30,6 +29,14 @@
         <el-menu-item index="/schedule">
           <el-icon><Calendar /></el-icon>
           <span>课表查询</span>
+        </el-menu-item> 
+        <el-menu-item index="/grades">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>成绩查询</span>
+        </el-menu-item>
+        <el-menu-item index="/transcript">
+          <el-icon><Tickets /></el-icon>
+          <span>成绩单</span>
         </el-menu-item>
         <el-menu-item index="/enrollment-changes">
           <el-icon><Document /></el-icon>
@@ -82,6 +89,8 @@ const activeMenu = computed(() => {
   if (path.startsWith('/students')) return '/students'
   if (path.startsWith('/classes')) return '/classes'
   if (path.startsWith('/courses')) return '/courses'
+  if (path.startsWith('/grades')) return '/grades'
+  if (path.startsWith('/transcript')) return '/transcript'
   if (path.startsWith('/enrollment-changes')) return '/enrollment-changes'
   if (path.startsWith('/course-selection')) return '/course-selection'
   if (path.startsWith('/course-roster')) return '/course-roster'
