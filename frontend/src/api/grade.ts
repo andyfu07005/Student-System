@@ -17,6 +17,7 @@ export interface Grade {
   courseNo?: string
   credit?: number
   courseType?: string
+}
 export type GpaAlgorithm = 'FOUR_POINT' | 'FIVE_POINT'
 
 export interface GradeRecord {
@@ -68,7 +69,7 @@ export function listGrades(params: {
   page?: number
   size?: number
 }) {
-  return http.get<Result<PageResult<Grade>>>('/grades', { params }).then(r => r.data)
+  return http.get<any, Result<PageResult<Grade>>>('/grades', { params })
 }
 
 export function getGrade(id: number) {
@@ -91,6 +92,7 @@ interface Result<T> {
   code: number
   message: string
   data: T
+}
 export function listGradeRecords(params: {
   studentId?: number
   courseId?: number

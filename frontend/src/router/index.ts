@@ -34,18 +34,13 @@ const router = createRouter({
           component: () => import('@/views/GradeQuery.vue'),
         },
         {
-          path: 'transcript',
-          name: 'Transcript',
-          component: () => import('@/views/Transcript.vue'),
-        },
-        {
           path: 'enrollment-changes',
           name: 'EnrollmentChangeList',
           component: () => import('@/views/EnrollmentChangeList.vue'),
         },
         {
-          path: 'grades',
-          name: 'GradeList',
+          path: 'grade-management',
+          name: 'GradeManagement',
           component: () => import('@/views/GradeList.vue'),
         },
         {

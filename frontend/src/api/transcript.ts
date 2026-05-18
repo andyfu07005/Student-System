@@ -34,7 +34,7 @@ export interface Transcript {
 }
 
 export function getTranscript(studentId: number, semester?: string) {
-  return http.get<Result<Transcript>>(`/transcripts/${studentId}`, { params: { semester } }).then(r => r.data)
+  return http.get<any, Result<Transcript>>(`/transcripts/${studentId}`, { params: { semester } })
 }
 
 export function getTranscriptPdfUrl(studentId: number, semester?: string): string {
