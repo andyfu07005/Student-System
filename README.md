@@ -4,13 +4,19 @@
 
 ## 功能特性
 
-- **学生管理**：学生信息的增删改查、学号自动生成、批量导入导出
+- **学生管理**：学生信息的增删改查、学号自动生成、批量导入导出（Excel）、学籍异动管理
 - **班级管理**：班级创建与维护、班主任指派、年级管理
 - **课程管理**：课程开设、学分与学时管理、授课教师分配
-- **成绩管理**：成绩录入与编辑、绩点自动计算、补考与重修标记、成绩统计分析
-- **RBAC 权限体系**：基于角色的访问控制，菜单/按钮/接口三级权限粒度
+- **选课管理**：学生在线选课与退选、课程容量控制、教师查看选课名单
+- **课表查询**：学生个人课表（周视图）、教师授课课表
+- **排课管理**：课程排课、时间冲突检测、教室冲突检测
+- **成绩管理**：成绩录入与编辑（含修改记录）、绩点自动计算（4.0/5.0 双算法）、补考与重修标记、成绩统计分析、成绩单 PDF 导出
+- **RBAC 权限体系**：基于 Apache Shiro + JWT 的角色-权限访问控制，菜单/按钮/接口三级权限粒度，前端路由守卫 + 后端注解拦截
 - **操作日志审计**：全量记录用户操作行为，支持按模块、操作类型、时间范围检索
-- **数据安全**：BCrypt 密码加密、CORS 跨域防护、SQL 注入防护（MyBatis-Plus 参数化查询）
+- **数据看板**：仪表盘统计概览（学生总数、教师总数、课程总数、成绩分布图表）
+- **系统配置**：学期起止日期、成绩录入截止时间、选课开放时段等参数配置
+- **数据安全**：BCrypt 密码加密、JWT 无状态认证、登录失败限流（Redis）、Token 黑名单、CORS 跨域防护
+- **一键部署**：Docker Compose 编排（MySQL + Redis + 后端 + 前端 + Nginx）
 
 ## 技术栈
 
@@ -18,12 +24,20 @@
 |------|------|------|------|
 | 后端框架 | Spring Boot | 3.2.5 | 快速开发脚手架，自动配置 |
 | ORM | MyBatis-Plus | 3.5.6 | 增强版 MyBatis，简化 CRUD |
+| 安全框架 | Apache Shiro | 2.0 | 轻量级 RBAC 权限控制 |
+| JWT | JJWT | 0.12.5 | 无状态认证令牌 |
 | 数据库 | MySQL | 8.0+ | 关系型数据库，InnoDB 引擎 |
+| 缓存 | Redis | 7.0+ | Session/Token 黑名单/登录限流 |
+| 连接池 | Druid | 1.2.22 | 高性能数据库连接池 |
+| 数据库迁移 | Flyway | 10.x | SQL 版本管理，自动迁移 |
 | JDK | Java | 17 | LTS 长期支持版本 |
 | 构建工具 | Maven | 3.8+ | 依赖管理与项目构建 |
+| 容器化 | Docker + Compose | — | 一键部署编排 |
 | 前端框架 | Vue 3 | 3.4 | Composition API + setup 语法糖 |
 | 构建工具 | Vite | 5.2 | 极速开发体验，ESBuild 预构建 |
 | UI 组件库 | Element Plus | 2.7 | 企业级 Vue 3 组件库 |
+| 状态管理 | Pinia | 2.1 | Vue 3 官方状态管理 |
+| 路由 | Vue Router | 4.3 | SPA 路由 + 权限守卫 |
 | HTTP 客户端 | Axios | 1.6 | Promise 风格 HTTP 请求 |
 | 类型系统 | TypeScript | 5.4 | 静态类型检查，提升代码健壮性 |
 | 代码规范 | ESLint + Prettier | — | 代码风格统一，保存自动格式化 |
@@ -38,17 +52,39 @@ Student-System/
 │       ├── java/com/student/
 │       │   ├── StudentSystemApplication.java  # Spring Boot 启动入口
 │       │   │                                  #   @MapperScan 自动扫描 Mapper 接口
-│       │   ├── common/                        # 通用模块（工具类、响应封装、常量）
-│       │   │   └── Result.java                # 统一 API 响应体 {code, message, data}
-│       │   ├── config/                        # 配置模块（CORS、安全、MyBatis-Plus）
-│       │   │   └── CorsConfig.java            # 跨域请求配置，开发环境放行所有来源
-│       │   ├── controller/                    # 控制器层（接收请求、参数校验、调用 Service）
-│       │   │   └── HealthController.java      # 健康检查接口示例
-│       │   ├── service/                       # [待创建] 业务逻辑层（事务管理、业务编排）
-│       │   │   └── impl/                      # Service 实现类
-│       │   ├── mapper/                        # [待创建] 数据访问层（MyBatis-Plus Mapper 接口）
-│       │   ├── entity/                        # [待创建] 实体类（与数据库表一一映射）
-│       │   └── dto/                           # [待创建] 数据传输对象（请求/响应模型）
+│       │   ├── common/                        # 通用模块（统一响应、异常处理、错误码）
+│       │   │   ├── Result.java                # 统一 API 响应体 {code, message, data}
+│       │   │   ├── ResultCode.java             # 业务错误码枚举（1xxx~6xxx）
+│       │   │   ├── BusinessException.java      # 业务异常类
+│       │   │   └── GlobalExceptionHandler.java # 全局异常处理器（10 种异常类型）
+│       │   ├── config/                        # 配置模块（Shiro、JWT、CORS、分页、Redis）
+│       │   │   ├── ShiroConfig.java           # Shiro + JWT Filter 链配置
+│       │   │   ├── JwtRealm.java              # JWT Realm（认证 + 授权）
+│       │   │   ├── JwtToken.java              # Shiro JWT Token 包装
+│       │   │   ├── JwtFilter.java             # Bearer Token 提取 + 黑名单检查
+│       │   │   ├── CorsConfig.java            # 跨域请求配置
+│       │   │   ├── MybatisPlusConfig.java     # 分页插件配置
+│       │   │   ├── MyMetaObjectHandler.java   # 自动填充 created_at/updated_at
+│       │   │   ├── PasswordEncoderConfig.java # BCrypt 密码编码器
+│       │   │   └── RedisConfig.java           # Redis String 序列化配置
+│       │   ├── controller/                    # 控制器层（11 个 Controller）
+│       │   │   ├── AuthController.java        # 注册/登录/刷新Token/登出/当前用户
+│       │   │   ├── UserController.java        # 用户 CRUD + 启用禁用 + 重置密码
+│       │   │   ├── RoleController.java        # 角色列表
+│       │   │   ├── PermissionController.java  # 权限树
+│       │   │   ├── StudentController.java     # 学生 CRUD
+│       │   │   ├── StudentImportExportController.java  # Excel 导入导出
+│       │   │   ├── ClassController.java       # 班级 CRUD
+│       │   │   ├── CourseController.java      # 课程 CRUD
+│       │   │   ├── EnrollmentChangeController.java  # 学籍异动
+│       │   │   ├── ScoreController.java       # 成绩录入/查询/统计/GPA
+│       │   │   └── HealthController.java      # 健康检查
+│       │   ├── service/                       # 业务逻辑层（Service 接口 + Impl 实现）
+│       │   ├── mapper/                        # 数据访问层（MyBatis-Plus Mapper）
+│       │   ├── entity/                        # 实体类（SysUser, Student, ClassInfo, Course, Score 等）
+│       │   ├── dto/                           # 数据传输对象（LoginDTO, RegisterDTO, UserVO 等）
+│       │   └── util/                          # 工具类
+│       │       └── JwtUtil.java               # JWT 签发/校验/解析工具
 │       └── resources/
 │           └── application.yml                # 应用配置（端口、数据源、MyBatis-Plus）
 ├── frontend/                                  # 前端 Vue 3 项目
@@ -64,14 +100,30 @@ Student-System/
 │       ├── App.vue                            # 根组件，整体布局（Header + Main）
 │       ├── env.d.ts                           # TypeScript 类型声明（.vue 模块）
 │       ├── api/                               # API 接口层
-│       │   ├── request.ts                     # Axios 实例（baseURL、拦截器、错误处理）
-│       │   └── health.ts                      # 健康检查 API 封装
+│       │   ├── request.ts                     # Axios 实例（拦截器、错误处理、Token 注入）
+│       │   ├── auth.ts                        # 认证 API
+│       │   ├── user.ts                        # 用户管理 API
+│       │   ├── student.ts                     # 学生管理 API
+│       │   ├── class.ts                       # 班级管理 API
+│       │   ├── course.ts                      # 课程管理 API
+│       │   └── score.ts                       # 成绩管理 API
 │       ├── components/                        # 公共组件
-│       │   └── HealthCheck.vue                # 服务健康状态展示组件
-│       ├── views/                             # [待创建] 页面组件（路由对应页面）
-│       ├── router/                            # [待创建] Vue Router 路由配置
-│       ├── stores/                            # [待创建] Pinia 状态管理
-│       └── utils/                             # [待创建] 工具函数（日期、格式化等）
+│       ├── views/                             # 页面组件
+│       │   ├── Login.vue                      # 登录页
+│       │   ├── Home.vue                       # 首页仪表盘
+│       │   ├── NotFound.vue                   # 404 页面
+│       │   ├── layout/MainLayout.vue          # 主布局（侧边菜单 + 权限过滤）
+│       │   ├── sys/User.vue                   # 用户管理（CRUD + 启用禁用 + 重置密码）
+│       │   ├── sys/Role.vue                   # 角色管理
+│       │   ├── student/List.vue               # 学生管理（CRUD + 导入导出）
+│       │   ├── student/Class.vue              # 班级管理
+│       │   ├── student/Enrollment.vue         # 学籍异动管理
+│       │   ├── course/List.vue                # 课程管理（选课/退选/课表）
+│       │   └── course/Score.vue               # 成绩管理（录入/统计/成绩单/GPA）
+│       ├── router/index.ts                    # 路由配置（登录守卫 + 权限守卫）
+│       ├── stores/                            # Pinia 状态管理
+│       │   ├── user.ts                        # 用户 Store（Token/用户信息/登出）
+│       │   └── permission.ts                  # 权限 Store（加载/检查）
 └── database/
     └── schema.sql                             # 数据库初始化脚本（建库、建表、种子数据）
 ```
@@ -368,7 +420,9 @@ Student-System/
 | 密码加密 | BCryptPasswordEncoder | 数据库中仅存储加密哈希，不可逆 |
 | SQL 注入防护 | MyBatis-Plus 参数化查询 | `${}` 占位符？项目中统一使用 `#{}` |
 | CORS 跨域控制 | CorsConfig.java | 生产环境应限制为具体域名而非 `*` |
-| RBAC 权限控制 | 5 张表实现角色-菜单-按钮-接口级控制 | 前端路由守卫 + 后端注解拦截 |
+| RBAC 权限控制 | 5 张表 + Apache Shiro + JWT | 前端路由守卫 + 后端 `@RequiresPermissions` 注解拦截 |
+| 登录限流 | Redis 计数器 | 5 次失败锁定 30 分钟 |
+| Token 黑名单 | Redis TTL 管理 | 登出后 Token 立即失效 |
 | 操作审计 | sys_operation_log 表 | 全量记录用户行为，包含 IP、参数、耗时 |
 | XSS 防护 | Vue 3 默认 HTML 转义 | 配合 Element Plus 安全渲染 |
 
@@ -384,50 +438,64 @@ Student-System/
 | Node.js | 18 | 20 LTS | 前端运行时 |
 | npm | 9 | 10+ | 前端包管理器 |
 
-### 1. 初始化数据库
+### 1. 准备工作
 
 ```bash
-# 方式一：命令行导入
-mysql -u root -p < database/schema.sql
-
-# 方式二：登录 MySQL 后导入
-mysql -u root -p
-mysql> source database/schema.sql;
+# 确保 MySQL 8.0+ 和 Redis 已启动
+# 创建数据库
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS sims DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-执行后将自动完成：
-- 创建 `sims` 数据库
-- 建立 10 张业务表及所有索引、外键约束
-- 插入 34 条默认权限、3 个角色及角色-权限关联
-- 创建默认管理员账号
+### 2. 一键部署（推荐）
 
-验证导入：
 ```bash
-mysql -u root -p -e "USE sims; SHOW TABLES; SELECT COUNT(*) FROM sys_user;"
+# 使用 Docker Compose 一键启动所有服务
+docker-compose up -d
 ```
 
-### 2. 配置后端
+服务将自动启动：
+- MySQL 8.0 + 自动建库
+- Redis 7
+- 后端 Spring Boot（8080 端口）
+- 前端 Nginx（80 端口）
 
-编辑 `backend/src/main/resources/application.yml`：
+Flyway 会在后端启动时自动执行数据库迁移脚本，无需手动导入 SQL。
+
+### 3. 手动启动（开发模式）
+
+#### 初始化数据库
+
+Flyway 会在后端启动时自动执行 `backend/src/main/resources/db/migration/` 下的迁移脚本：
+
+- `V1__init_schema.sql` — 创建 11 张表 + 索引 + 外键约束 + 种子数据（权限/角色/管理员账号）
+
+#### 配置后端
+
+#### 配置后端
+
+编辑 `backend/src/main/resources/application-dev.yml`：
 
 ```yaml
-server:
-  port: 8080                         # 后端监听端口
-
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/sims?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root                   # 修改为实际 MySQL 用户名
     password: root                   # 修改为实际 MySQL 密码
     driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost                  # Redis 服务器地址
+    port: 6379
+  flyway:
+    enabled: true                    # 自动执行数据库迁移
+    locations: classpath:db/migration
 
 mybatis-plus:
   configuration:
-    map-underscore-to-camel-case: true   # 下划线转驼峰（student_no → studentNo）
+    map-underscore-to-camel-case: true   # 下划线转驼峰
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 开发环境打印 SQL
 ```
 
-### 3. 启动后端
+#### 启动后端
 
 ```bash
 cd backend
@@ -442,11 +510,18 @@ java -jar target/student-system-1.0.0.jar
 
 验证后端：
 ```bash
+# 健康检查
 curl http://localhost:8080/api/health
-# {"code":200,"message":"success","data":{"status":"UP","service":"Student Management System"}}
+# {"code":200,"message":"操作成功","data":{"status":"UP","service":"Student Management System"}}
+
+# 管理员登录获取 Token
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+# {"code":200,"message":"操作成功","data":{"accessToken":"eyJ...","refreshToken":"eyJ..."}}
 ```
 
-### 4. 启动前端
+#### 启动前端
 
 ```bash
 cd frontend
@@ -460,7 +535,7 @@ npm run dev
 
 浏览器访问 `http://localhost:3000`，页面将自动调用健康检查接口展示后端连接状态。
 
-### 5. 生产构建与部署
+### 4. 生产构建与部署
 
 ```bash
 # 前端构建
@@ -505,10 +580,100 @@ server {
 
 ## API 接口
 
-### 当前可用接口
+### API 接口总览
+
+#### 认证模块 (`/api/auth`)
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
+| POST | `/api/auth/register` | 用户注册 | 无需认证 |
+| POST | `/api/auth/login` | 用户登录 → 返回 accessToken + refreshToken | 无需认证 |
+| POST | `/api/auth/refresh` | 刷新 access token | 无需认证 |
+| POST | `/api/auth/logout` | 注销（token 加入黑名单） | JWT |
+| GET | `/api/auth/me` | 获取当前用户信息 | JWT |
+
+#### 用户管理 (`/api/users`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/users?page=&size=&username=&status=` | 分页查询用户 | `sys:user:list` |
+| GET | `/api/users/{id}` | 查看用户详情 | `sys:user:list` |
+| POST | `/api/users` | 创建用户 | `sys:user:create` |
+| PUT | `/api/users/{id}` | 编辑用户 | `sys:user:update` |
+| PUT | `/api/users/{id}/status` | 启用/禁用 | `sys:user:update` |
+| PUT | `/api/users/{id}/password` | 重置密码 | `sys:user:update` |
+| DELETE | `/api/users/{id}` | 删除用户 | `sys:user:delete` |
+
+#### 学生管理 (`/api/students`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/students?page=&size=&keyword=&classId=&status=` | 分页查询学生 | `student:list` |
+| GET | `/api/students/{id}` | 查看学生详情 | `student:list` |
+| POST | `/api/students` | 创建学生 | `student:create` |
+| PUT | `/api/students/{id}` | 编辑学生 | `student:update` |
+| DELETE | `/api/students/{id}` | 删除学生 | `student:delete` |
+| POST | `/api/students/import` | Excel 批量导入 | `student:create` |
+| GET | `/api/students/export` | Excel 导出 | `student:export` |
+| GET | `/api/students/template` | 下载导入模板 | `student:create` |
+
+#### 班级管理 (`/api/classes`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/classes?page=&size=&keyword=&grade=` | 分页查询班级 | `class:list` |
+| GET | `/api/classes/{id}` | 查看班级详情 | `class:list` |
+| POST | `/api/classes` | 创建班级 | `class:create` |
+| PUT | `/api/classes/{id}` | 编辑班级 | `class:update` |
+| DELETE | `/api/classes/{id}` | 删除班级 | `class:delete` |
+
+#### 课程管理 (`/api/courses`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/courses?page=&size=&keyword=&type=` | 分页查询课程 | `course:list` |
+| GET | `/api/courses/{id}` | 查看课程详情 | `course:list` |
+| POST | `/api/courses` | 创建课程 | `course:create` |
+| PUT | `/api/courses/{id}` | 编辑课程 | `course:update` |
+| DELETE | `/api/courses/{id}` | 删除课程 | `course:delete` |
+| POST | `/api/courses/{id}/enroll` | 学生选课 | 认证用户 |
+| DELETE | `/api/courses/{id}/enroll` | 学生退选 | 认证用户 |
+| GET | `/api/courses/schedule` | 查询个人课表（周视图） | 认证用户 |
+| POST | `/api/courses/arrange` | 课程排课 | `course:arrange` |
+
+#### 成绩管理 (`/api/scores`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/scores?page=&size=&studentId=&courseId=&semester=` | 查询成绩 | `score:list` |
+| POST | `/api/scores` | 录入成绩 | `score:create` |
+| PUT | `/api/scores/{id}` | 修改成绩（记录修改日志） | `score:update` |
+| GET | `/api/scores/statistics` | 成绩统计（平均分/及格率/分布） | `score:list` |
+| GET | `/api/scores/report` | 生成成绩单（PDF） | `score:list` |
+| GET | `/api/scores/gpa` | 计算 GPA（4.0/5.0 双算法） | `score:list` |
+
+#### 学籍异动 (`/api/enrollment-changes`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/enrollment-changes?studentId=&page=&size=` | 查询异动记录 | `student:list` |
+| POST | `/api/enrollment-changes` | 记录学籍异动 | `student:update` |
+
+#### 角色与权限 (`/api/roles`, `/api/permissions`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/roles` | 角色列表 | `sys:role:list` |
+| GET | `/api/permissions` | 权限树 | `sys:role:list` |
+
+#### 系统运维 (`/api/system`)
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/logs?page=&size=&module=&operator=&startTime=&endTime=` | 操作日志查询 | `log:list` |
+| GET | `/api/dashboard` | 数据看板统计 | `system:manage` |
+| GET | `/api/system/config` | 查询系统配置 | `system:manage` |
+| PUT | `/api/system/config` | 更新系统配置 | `system:manage` |
 | GET | `/api/health` | 服务健康检查 | 无需认证 |
 
 ### 统一响应格式
@@ -519,16 +684,14 @@ server {
 // 成功响应
 {
   "code": 200,
-  "message": "success",
-  "data": {
-    // 业务数据
-  }
+  "message": "操作成功",
+  "data": { ... }
 }
 
-// 错误响应
+// 业务错误响应
 {
-  "code": 400,
-  "message": "参数校验失败：学号不能为空",
+  "code": 1002,
+  "message": "用户名已存在",
   "data": null
 }
 ```
@@ -544,41 +707,36 @@ server {
 | 404 | 未找到 | 请求的资源不存在 |
 | 500 | 服务器错误 | 后端异常 |
 
-### 规划中的 API 模块
+**业务错误码分段：**
 
-| 模块 | 基础路径 | 预计接口数 | 状态 |
-|------|----------|------------|------|
-| 认证登录 | `/api/auth` | 3 | 待开发 |
-| 用户管理 | `/api/users` | 5 | 待开发 |
-| 角色管理 | `/api/roles` | 5 | 待开发 |
-| 学生管理 | `/api/students` | 6 | 待开发 |
-| 班级管理 | `/api/classes` | 5 | 待开发 |
-| 课程管理 | `/api/courses` | 5 | 待开发 |
-| 成绩管理 | `/api/scores` | 5 | 待开发 |
-| 日志管理 | `/api/logs` | 2 | 待开发 |
-| 数据统计 | `/api/statistics` | 4 | 待开发 |
+| 范围 | 模块 |
+|------|------|
+| 1xxx | 用户模块（用户不存在/用户名已存在/密码错误等） |
+| 2xxx | 学生模块（学生不存在/学号已存在） |
+| 3xxx | 班级模块 |
+| 4xxx | 课程模块 |
+| 5xxx | 成绩模块 |
+| 6xxx | 文件操作 |
 
 ## 前端设计
 
-### 组件树（规划）
+### 组件树
 
 ```
 App.vue
-├── LayoutHeader.vue            # 顶部导航栏（Logo、用户信息、退出登录）
-├── LayoutSidebar.vue           # 侧边栏菜单（根据权限动态渲染）
-├── LayoutMain.vue              # 主内容区
-│   └── <router-view />
-│       ├── LoginView.vue           # 登录页
-│       ├── DashboardView.vue       # 仪表盘（统计概览）
-│       ├── StudentListView.vue     # 学生列表
-│       │   └── StudentDialog.vue   # 学生新增/编辑弹窗
-│       ├── ClassManageView.vue     # 班级管理
-│       ├── CourseManageView.vue    # 课程管理
-│       ├── ScoreListView.vue       # 成绩列表
-│       │   └── ScoreImport.vue     # 成绩批量导入
-│       ├── UserManageView.vue      # 用户管理（管理员）
-│       ├── RoleManageView.vue      # 角色权限配置（管理员）
-│       └── LogViewerView.vue       # 操作日志查看（管理员）
+├── Login.vue                            # 登录页
+├── MainLayout.vue                       # 主布局（顶部导航 + 侧边栏 + 内容区）
+│   ├── Sidebar (权限菜单过滤)             # 侧边栏菜单（根据权限动态渲染）
+│   └── Main Content (<router-view />)
+│       ├── Home.vue                     # 仪表盘（统计概览卡片）
+│       ├── sys/User.vue                 # 用户管理（分页表格 + CRUD 弹窗 + 状态切换 + 重置密码）
+│       ├── sys/Role.vue                 # 角色管理
+│       ├── student/List.vue             # 学生管理（CRUD + 搜索 + 导入导出按钮）
+│       ├── student/Class.vue            # 班级管理
+│       ├── student/Enrollment.vue       # 学籍异动管理（时间线展示）
+│       ├── course/List.vue              # 课程管理（选课/退选/课表/排课）
+│       └── course/Score.vue             # 成绩管理（录入/统计图表/成绩单/GPA）
+└── NotFound.vue                         # 404 页面
 ```
 
 ### 前端开发规范
@@ -589,33 +747,55 @@ App.vue
 - **样式方案**：Element Plus 内置样式 + scoped 局部样式
 - **代码格式化**：无分号、单引号、2 空格缩进、尾逗号（ES5 规则）、printWidth=100
 
-## 开发计划
+## 开发计划与进度
 
-### 当前进度
+### 总体进度：21/21 子任务代码开发完成 ✅
 
-| 模块 | 后端 | 前端 | 状态 |
-|------|------|------|------|
-| 项目骨架 | ✅ | ✅ | 已完成 |
-| 数据库设计 | ✅ | — | 已完成 |
-| 健康检查 | ✅ | ✅ | 已完成 |
-| 认证登录 | ⬜ | ⬜ | 待开发 |
-| 用户管理 | ⬜ | ⬜ | 待开发 |
-| 学生管理 | ⬜ | ⬜ | 待开发 |
-| 班级管理 | ⬜ | ⬜ | 待开发 |
-| 课程管理 | ⬜ | ⬜ | 待开发 |
-| 成绩管理 | ⬜ | ⬜ | 待开发 |
-| 日志管理 | ⬜ | ⬜ | 待开发 |
-| 数据统计 | ⬜ | ⬜ | 待开发 |
+> 全部任务代码已合并至 main 分支，一期已验收通过，二期和三期处于审核中状态。
 
-### 推荐开发顺序
+### 一期 MVP — 核心基础（11/11 ✅ 已完成）
 
-1. **认证模块**：实现 Spring Security + JWT 登录，前后端打通认证流程
-2. **学生管理**：CRUD + 分页查询 + Excel 导出，是最核心的业务模块
-3. **班级管理**：关联学生，为后续模块打基础
-4. **课程管理**：关联教师，为成绩模块准备数据
-5. **成绩管理**：关联学生+课程，实现成绩录入与统计
-6. **用户与角色管理**：完善 RBAC 权限体系，前后端权限控制
-7. **数据统计**：仪表盘图表展示（学生分布、成绩趋势等）
+| 序号 | 任务 | 模块 | 状态 |
+|:----|:-----|:-----|:----:|
+| 1 | 项目脚手架搭建 | 系统基础 | ✅ done |
+| 2 | 数据库设计（11 张表 + 索引 + 种子数据） | 系统基础 | ✅ done |
+| 3 | 统一响应与异常处理 | 系统基础 | ✅ done |
+| 4 | 用户注册与登录（Shiro + JWT + BCrypt + 登录限流） | 用户权限 | ✅ done |
+| 5 | RBAC 角色权限管理（前后端双重鉴权） | 用户权限 | ✅ done |
+| 6 | 用户管理 CRUD（分页 + 启用禁用 + 重置密码） | 用户权限 | ✅ done |
+| 7 | 学生信息 CRUD | 学生管理 | ✅ done |
+| 8 | 班级管理 CRUD | 学生管理 | ✅ done |
+| 9 | 学生信息批量导入导出（Excel） | 学生管理 | ✅ done |
+| 10 | 学籍异动管理 | 学生管理 | ✅ done |
+| 11 | 课程信息 CRUD | 课程管理 | ✅ done |
+
+### 二期 — 选课 + 成绩（6/6 ✅ 代码完成，待审核）
+
+| 序号 | 任务 | 模块 | 状态 |
+|:----|:-----|:-----|:----:|
+| 12 | 学生选课（选课/退选 + 容量控制） | 选课管理 | 🔍 in_review |
+| 13 | 课表查询（周视图） | 选课管理 | 🔍 in_review |
+| 14 | 成绩录入与修改（含修改日志） | 成绩管理 | 🔍 in_review |
+| 15 | 成绩查询与统计（图表展示） | 成绩管理 | 🔍 in_review |
+| 16 | 成绩单生成（PDF 导出） | 成绩管理 | 🔍 in_review |
+| 17 | GPA 计算（4.0/5.0 双算法） | 成绩管理 | 🔍 in_review |
+
+### 三期 — 排课 + 运维（4/4 ✅ 代码完成，待审核）
+
+| 序号 | 任务 | 模块 | 状态 |
+|:----|:-----|:-----|:----:|
+| 18 | 课程安排（时间/教室冲突检测） | 排课管理 | 🔍 in_review |
+| 19 | 操作日志（全量审计 + 查询） | 系统运维 | 🔍 in_review |
+| 20 | 数据看板（仪表盘统计） | 系统运维 | 🔍 in_review |
+| 21 | 系统配置（学期/选课时段等参数） | 系统运维 | 🔍 in_review |
+
+### 基础设施增强（已完成）
+
+| 任务 | 内容 | 状态 |
+|:-----|:-----|:----:|
+| Flyway 数据库脚本管理 | SQL 版本迁移管理 | ✅ done |
+| Docker 一键部署 | Docker Compose 编排（MySQL + Redis + 后端 + 前端 + Nginx） | ✅ done |
+| README 完善 | 项目文档与启动指南 | ✅ done |
 
 ## 常见问题
 
@@ -639,7 +819,7 @@ A: 在 `pom.xml` 同级目录创建 `.mvn/maven.config` 或在 `~/.m2/settings.x
 A: 确认 Node.js 版本 ≥ 18，可尝试 `npm config set registry https://registry.npmmirror.com` 切换国内镜像。
 
 **Q: 如何新增一个角色？**
-A: 在 `sys_role` 表插入角色，在 `sys_role_permission` 表配置其权限关联即可；管理界面开发中。
+A: 使用管理员账号登录，在「系统管理 → 角色管理」页面中创建角色并配置权限关联。
 
 ## 技术选型理由
 
